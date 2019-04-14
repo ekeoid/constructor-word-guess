@@ -65,3 +65,6 @@ typings/
 
 #Windows
 desktop.ini
+
+#VS Code
+.vscode
