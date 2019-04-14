@@ -16,7 +16,7 @@ class Word {
         for (let i=0; i < this.word.length; i++) {
             word += this.word[i].print;
         }
-        console.log(word);
+        //console.log(word);
         return word;
     }
 

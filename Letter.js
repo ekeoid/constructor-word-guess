@@ -13,7 +13,7 @@ class Letter {
     }
 
     guess(character) {
-        if (this.character == character)
+        if (this.character.toLowerCase() == character.toLowerCase())
             this.isGuessed = true;
     }
 
