@@ -2,17 +2,17 @@ const inquirer = require("inquirer");
 const Word = require("./Word.js");
 const fs = require("fs");
 
-var newWord = "";
 var guess;
 
 var numGuesses = 7;
 var guessed = {
     letters: [],
+    right: [],
     words: []
 };
 
-//getWord();
-playAgain();
+getWord();
+//playAgain();
 
 function formatString(string, character) {
     // format string to insert spaces
@@ -37,7 +37,7 @@ function formatString(string, character) {
                     color.default +
                     colorString.substr(i + 2);
 
-                i += color.highlight.length + color.default.length;
+                i += color.highlight.length + color.default.length + 1;
             }
         }
     }
@@ -46,8 +46,11 @@ function formatString(string, character) {
 
 function getWord() {
     // read list of words from an external file list
+    
+    // Did not add feature for non-repeating words.
+    // However 'guessed.words' tracks all words used.
     let filename = "wordlist.txt";
-    /*
+    
     fs.readFile(filename, "utf8", function (err, data) {
         if (err) {
             return console.log(err);
@@ -57,17 +60,27 @@ function getWord() {
         
         init_game( data[Math.floor( Math.random() * data.length + 1 )] );
     });
-    */
-
-    init_game ("Jaime Lannister");
+    
 }
 
+
 function init_game(word) {
+    let array = [196, 160, 124, 124, 88, 88, 52, 52, 52,  88, 88, 124, 124, 160];
+    let title = {
+        name: "   Welcome to the Word Guess Game\n\n Characters from the Game of Thrones",
+        color: ""
+    };
+    
+    for (let i=0; i < title.name.length; i++) {
+        title.color += "\033[38;5;" + array[i % array.length] + "m" + title.name[i] + "\033[0m";
+    }
+
+    console.log("\n" + title.color + "");
     guessed.words.push(word);
     guess = new Word(word);
 
     guess.update(" ");  // reveal spaces
-    console.log("\n\n" + formatString(guess.print, null) + "\n\n");
+    console.log("\n\n" + "    " + formatString(guess.print, null) + "\n\n");
 
     play();
 }
@@ -76,7 +89,7 @@ function play() {
     inquirer.prompt([
         {
             name: "guessedLetter",
-            message: "Guess a letter! (type \"quit\" to exit) "
+            message: "Guess a letter!" + "\033[38;5;238m" + " (type \"quit\" to exit) "
         }
 
     ]).then(function (input) {
@@ -101,20 +114,21 @@ function playAgain() {
             numGuesses = 7;
             guessed = {
                 letters: [],
+                right: [],
                 words: guessed.words
             };
 
             getWord();
 
         } else {
-            console.log("\n" + "\033[38;5;123m" + "Good Bye!!" + "\033[0m" + "\n");
+            console.log("\n" + "\033[38;5;123m" + "GOOD BYE!!!" + "\033[0m" + "\n");
             process.exit();
         }       
     });
 }
 
 function printBoard(letter) {
-    console.log("\n\n\n\n" + formatString(guess.print, letter) + "\n");
+    console.log("\n\n\n\n" + "    " + formatString(guess.print, letter) + "\n");
     console.log("Guessed letters: " + "\033[38;5;81m" + guessed.letters.join("\033[0m, \033[38;5;81m"));
 }
 
@@ -135,13 +149,14 @@ function checkGuess(input) {
             guessed.letters.push(letter);
 
             guess.update(letter);
-            console.log ("GW: " + guessed.words[guessed.words.length - 1]);
-            console.log ("GP: " + guess.print);
+            //console.log ("GW: " + guessed.words[guessed.words.length - 1]);
+            //console.log ("GP: " + guess.print);
             
             if (guess.print.toLowerCase().indexOf(letter) >= 0) {
                 
-                printBoard(letter);
+                printBoard(letter);                
                 console.log("\n" + "\033[38;5;28m" + "CORRECT!!!" + "\033[0m" + "\n\n");
+                guessed.right.push(letter);
 
             } else {
 
@@ -154,7 +169,9 @@ function checkGuess(input) {
 
                 if (numGuesses <= 0) {
 
-                    console.log("\n" + "\033[38;5;123m" + "YOU RAN OUT OF GUESSES.  GAME OVER!!!" + "\033[0m" + "\n\n");
+                    console.log("\n" + "\033[0m" + "Answer was " + 
+                                "\033[38;5;123m" + guessed.words[guessed.words.length - 1] + "\n" + 
+                                "\033[38;5;183m" + "YOU RAN OUT OF GUESSES.  GAME OVER!!!" + "\033[0m" + "\n\n");
                     playAgain();
 
                 }
@@ -163,14 +180,19 @@ function checkGuess(input) {
             if (guess.print == guessed.words[guessed.words.length - 1]) {
 
                 console.log("\n" + "\033[38;5;123m" + "YOU GUESSED IT!  GOOD JOB!!!" + "\033[0m" + "\n\n");
+                
                 playAgain();
 
             } else {
-                play();
+                if (numGuesses > 0) {
+                    play();
+                }
             }
         } else {
-
-            printBoard( guessed.letters[guessed.letters.length-1] );
+            // Still has some errors on some repeat characters
+            // when the repeat character is not in the word to guess.
+            // Not best fix, but added guessed.right
+            printBoard( guessed.right[guessed.right.length-1] );
             console.log("\n" + "\033[38;5;124m" + "You already guessed " + input.guessedLetter + "\033[0m" +"\n");
             play();
 
